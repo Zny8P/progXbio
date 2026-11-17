@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genética Forense — Flashcards</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#071a2e,#0d3551);color:#eef7ff;min-height:100vh}
+header{text-align:center;padding:38px 20px 20px}h1{margin:0;font-size:clamp(1.8rem,5vw,3rem)}header p{color:#b9d8e9}
+main{max-width:850px;margin:auto;padding:15px 20px 45px}
+.progress{height:10px;background:#163c55;border-radius:20px;overflow:hidden;margin:15px 0 25px}.bar{height:100%;width:6.25%;background:#40d6a3;transition:.4s}
+.stats{display:flex;justify-content:space-between;color:#b9d8e9;font-size:.95rem}
+.card-wrap{perspective:1200px}.card{height:390px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform .65s}.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:24px;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;backface-visibility:hidden;box-shadow:0 15px 45px rgba(0,0,0,.3)}
+.front{background:linear-gradient(145deg,#fff,#dceefa);color:#10283a}.back{background:linear-gradient(145deg,#1db58b,#08755e);transform:rotateY(180deg)}
+.tag{text-transform:uppercase;letter-spacing:2px;font-size:.75rem;opacity:.65;margin-bottom:25px}.content{font-size:clamp(1.35rem,3vw,2rem);line-height:1.35;font-weight:700}.hint{margin-top:28px;font-size:.9rem;opacity:.65}
+.controls{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}button{border:0;border-radius:14px;padding:14px 22px;font-size:1rem;font-weight:bold;cursor:pointer;transition:.2s}button:hover{transform:translateY(-2px)}.prev,.next{background:#dceefa;color:#10283a}.know{background:#40d6a3;color:#062b20}.miss{background:#ff8b8b;color:#4a1010}
+.overview{margin-top:38px;background:rgba(255,255,255,.07);border-radius:20px;padding:22px}.overview h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.mini{padding:12px;background:rgba(255,255,255,.08);border-radius:12px;font-size:.88rem;cursor:pointer}.mini:hover{background:rgba(64,214,163,.2)}
+footer{text-align:center;color:#9fc0d4;padding:20px;font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+<h1>🧬 Genética Forense</h1>
+<p>Flashcards interativos para a apresentação de Biologia</p>
+</header>
+<main>
+<div class="stats"><span id="counter">Flashcard 1 de 16</span><span id="score">✓ 0 &nbsp; × 0</span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="card-wrap">
+<div class="card" id="card" onclick="flip()">
+<div class="face front"><div class="tag">Pergunta</div><div class="content" id="front"></div><div class="hint">Clique para revelar a resposta</div></div>
+<div class="face back"><div class="tag">Resposta</div><div class="content" id="back"></div><div class="hint">Clique para voltar</div></div>
+</div>
+</div>
+<div class="controls">
+<button class="prev" onclick="move(-1,event)">← Anterior</button>
+<button class="miss" onclick="rate(false,event)">× Não sabia</button>
+<button class="know" onclick="rate(true,event)">✓ Sabia</button>
+<button class="next" onclick="move(1,event)">Próximo →</button>
+</div>
+<section class="overview">
+<h2>Ir para um conceito</h2>
+<div class="grid" id="grid"></div>
+</section>
+</main>
+<footer>Material baseado nos conteúdos de genética forense e sequenciamento de DNA.</footer>
+<script>
+const cards=[
+["O que é ciência forense?","Aplicação de conhecimentos científicos para solucionar crimes."],
+["O que é genética forense?","Uso do DNA para criar e analisar perfis genéticos em investigações."],
+["O que é fenótipo?","Características morfológicas, fisiológicas e comportamentais de um indivíduo."],
+["De que resulta o fenótipo?","Do genótipo e da interação do indivíduo com o ambiente."],
+["O que é genótipo?","O conjunto de genes de um indivíduo."],
+["O que são alelos?","Variantes de um mesmo gene no mesmo lócus de cromossomos homólogos."],
+["Do que é formado um nucleotídeo do DNA?","Açúcar, fosfato e uma base nitrogenada."],
+["Qual é a regra de pareamento das bases do DNA?","Adenina liga-se à timina; citosina liga-se à guanina."],
+["O que é um gene?","Trecho do DNA que fornece instruções para um produto gênico."],
+["O que é genoma?","O conjunto de toda a informação genética de um indivíduo."],
+["O que é sequenciamento genético?","Técnica que identifica a ordem exata dos nucleotídeos do DNA."],
+["Quais são as etapas básicas do sequenciamento?","Coleta, extração, amplificação/marcação e análise dos resultados."],
+["Em que se baseia o método de Sanger?","Na síntese de fragmentos finalizados por nucleotídeos modificados fluorescentes."],
+["O que ocorre ao inserir um nucleotídeo modificado no método Sanger?","A cópia da nova fita é interrompida, formando fragmentos marcados."],
+["Como os fragmentos se comportam na eletroforese?","Fragmentos menores deslocam-se mais rápido pelo gel que os maiores."],
+["Por que o sequenciamento ajudou mais que STR no caso estudado?","Detectou diferenças específicas nas bases, distinguindo os suspeitos com maior precisão."]
+];
+let i=0,known=0,missed=0;
+const card=document.getElementById('card');
+function render(){
+ card.classList.remove('flipped');
+ document.getElementById('front').textContent=cards[i][0];
+ document.getElementById('back').textContent=cards[i][1];
+ document.getElementById('counter').textContent=`Flashcard ${i+1} de ${cards.length}`;
+ document.getElementById('bar').style.width=`${((i+1)/cards.length)*100}%`;
+ document.getElementById('score').innerHTML=`✓ ${known} &nbsp; × ${missed}`;
+}
+function flip(){card.classList.toggle('flipped')}
+function move(n,e){e.stopPropagation();i=(i+n+cards.length)%cards.length;render()}
+function rate(ok,e){e.stopPropagation();ok?known++:missed++; if(i<cards.length-1)i++; render()}
+cards.forEach((c,n)=>{let d=document.createElement('div');d.className='mini';d.textContent=`${n+1}. ${c[0]}`;d.onclick=()=>{i=n;render();window.scrollTo({top:0,behavior:'smooth'})};document.getElementById('grid').appendChild(d)});
+render();
+</script>
+</body>
+</html>

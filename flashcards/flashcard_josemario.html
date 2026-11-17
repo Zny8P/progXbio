@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards - Genética Forense e Biologia Molecular</title>
+<style>
+  :root {
+    --bg: #09090b;
+    --card-front: #18181b;
+    --card-back: #b91c1c;
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --accent: #ef4444;
+    --btn-bg: #27272a;
+    --btn-hover: #3f3f46;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 600px;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .stat-correct {
+    color: #4ade80;
+  }
+
+  .stat-wrong {
+    color: #f87171;
+  }
+
+  .progress-container {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #18181b;
+    border-radius: 99px;
+    margin: 0 12px;
+    overflow: hidden;
+    border: 1px solid #27272a;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 10%;
+    transition: width 0.3s ease;
+  }
+
+  /* Flashcard 3D Flip */
+  .scene {
+    width: 100%;
+    max-width: 560px;
+    height: 320px;
+    perspective: 1000px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .card-front {
+    background: linear-gradient(145deg, #18181b, #0f0f12);
+  }
+
+  .card-back {
+    background: linear-gradient(145deg, #991b1b, #dc2626);
+    transform: rotateY(180deg);
+  }
+
+  .badge {
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 12px;
+    border-radius: 99px;
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .card-front .badge {
+    color: var(--accent);
+  }
+
+  .card-back .badge {
+    color: #fef2f2;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .card-content {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    text-align: center;
+    margin: auto 0;
+    font-weight: 500;
+    overflow-y: auto;
+    max-height: 190px;
+    padding: 4px;
+  }
+
+  .card-back .card-content {
+    font-size: 1.05rem;
+    font-weight: 400;
+  }
+
+  .card-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    padding: 12px 14px;
+    border: none;
+    border-radius: 12px;
+    background-color: var(--btn-bg);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    user-select: none;
+  }
+
+  button:hover {
+    background-color: var(--btn-hover);
+  }
+
+  button:active {
+    transform: scale(0.97);
+  }
+
+  .btn-flip {
+    background-color: var(--accent);
+    color: #ffffff;
+    flex: 1.3;
+  }
+
+  .btn-flip:hover {
+    background-color: #f87171;
+  }
+
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .choice-btn {
+    min-height: 48px;
+    padding: 9px 10px;
+    border: 1px solid #3f3f46;
+    background: #27272a;
+    text-align: left;
+    font-size: 0.84rem;
+    line-height: 1.3;
+  }
+
+  .choice-btn:disabled { cursor: default; opacity: 1; }
+  .choice-btn.selected-correct { background: #14532d; border-color: #4ade80; color: #dcfce7; }
+  .choice-btn.selected-wrong { background: #7f1d1d; border-color: #f87171; color: #fee2e2; }
+  .choice-btn.reveal-correct { border-color: #4ade80; }
+  .choice-feedback { min-height: 34px; margin-top: 8px; color: #fef2f2; font-size: 0.84rem; text-align: center; line-height: 1.35; }
+  .card-front { justify-content: flex-start; }
+  .card-front .card-content { flex: 0 0 auto; margin: 12px 0 4px; max-height: 100px; }
+  .card-front .card-hint { margin-top: auto; padding-top: 6px; }
+
+  .shuffle-row {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid #27272a;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 9px 14px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--text-main);
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  @media (max-width: 480px) {
+    .scene {
+      height: 470px;
+    }
+    .choices { grid-template-columns: 1fr; gap: 6px; }
+    .choice-btn { min-height: 40px; padding: 8px 10px; }
+    .card-face {
+      padding: 18px 14px;
+    }
+    .card-content {
+      font-size: 1.05rem;
+    }
+    .card-back .card-content {
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 11px 8px;
+      font-size: 0.88rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Genética Forense & Biologia Molecular</h1>
+    <p>3ª Série EM • Aulas 1 a 4 (4º Bimestre) • 28 questões de múltipla escolha</p>
+  </div>
+
+  <div class="stats-bar">
+    <span class="stat-correct">Acertos: <strong id="correctCount">0</strong></span>
+    <span style="color: #52525b;">|</span>
+    <span class="stat-wrong">Erros: <strong id="wrongCount">0</strong></span>
+  </div>
+
+  <div class="progress-container">
+    <span id="counter">1 / 28</span>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:3.57%"></div>
+    </div>
+    <span id="topicTag">Aula 1</span>
+  </div>
+
+  <div class="scene" id="cardScene" onclick="flipCard()">
+    <div class="card" id="cardElement">
+      <div class="card-face card-front">
+        <span class="badge">Pergunta</span>
+        <div class="card-content" id="frontText"></div>
+        <div class="choices" id="choicesContainer"></div>
+        <div class="choice-feedback" id="choiceFeedback" aria-live="polite"></div>
+        <div class="card-hint">Escolha uma alternativa. Depois, vire o card para ver a explicação.</div>
+      </div>
+      <div class="card-face card-back">
+        <span class="badge">Resposta</span>
+        <div class="card-content" id="backText"></div>
+        <div class="card-hint">Toque ou clique para voltar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevCard()">&#8592; Anterior</button>
+    <button class="btn-flip" onclick="flipCard()">Virar Card</button>
+    <button onclick="nextCard()">Próximo &#8594;</button>
+  </div>
+
+
+  <div class="shuffle-row">
+    <button class="btn-secondary" onclick="resetStats()">🔄 Reiniciar Progresso</button>
+  </div>
+
+<script>
+  const originalCards = [
+    { topic: `Aula 1 • Ciência Forense`, front: `O que é ciência forense?`, back: `É a aplicação de conhecimentos e técnicas científicas para auxiliar a resolução de crimes.` },
+    { topic: `Aula 1 • Genética Forense`, front: `O que é genética forense?`, back: `É a área que utiliza o DNA para criar e analisar perfis genéticos, auxiliando na identificação de pessoas em investigações.` },
+    { topic: `Aula 1 • Genética Forense`, front: `Quais vestígios biológicos podem ser analisados pela genética forense?`, back: `Sangue, sêmen, saliva, células epiteliais, fios de cabelo com raiz, dentes, urina e fezes, entre outros vestígios que possam conter material biológico.` },
+    { topic: `Aula 1 • Conceitos Base`, front: `Qual é a diferença entre genótipo e fenótipo?`, back: `<strong>Genótipo</strong> é a constituição genética do indivíduo. <strong>Fenótipo</strong> corresponde às características observáveis, resultantes da interação entre genótipo e ambiente.` },
+    { topic: `Aula 1 • Conceitos Base`, front: `O que é DNA e qual é sua função?`, back: `O DNA é a molécula que armazena a informação genética dos seres vivos.` },
+    { topic: `Aula 1 • DNA`, front: `Quais são as bases nitrogenadas do DNA e como elas se pareiam?`, back: `Adenina (A) pareia com timina (T), e citosina (C) pareia com guanina (G).` },
+    { topic: `Aula 1 • Conceitos Base`, front: `O que é um gene?`, back: `É um segmento do DNA que contém informação para produzir um produto funcional, como uma molécula de RNA ou uma proteína.` },
+    { topic: `Aula 1 • Conceitos Base`, front: `O que é genoma?`, back: `É o conjunto completo do material genético de um organismo. No ser humano, inclui DNA nuclear e DNA mitocondrial.` },
+    { topic: `Aula 1 • Conceitos Base`, front: `Qual é a diferença entre genoma e código genético?`, back: `<strong>Genoma</strong> é o conjunto do material genético de um organismo. <strong>Código genético</strong> é o conjunto de regras que relaciona códons do RNA aos aminoácidos.` },
+    { topic: `Aula 2 • Biologia Molecular`, front: `Qual é o fluxo básico da informação genética na síntese proteica?`, back: `A informação segue, de modo geral, do <strong>DNA para o RNA</strong> (transcrição) e do <strong>RNA para a proteína</strong> (tradução).` },
+    { topic: `Aula 2 • Síntese Proteica`, front: `O que acontece na transcrição?`, back: `A informação de um trecho do DNA é copiada para formar uma molécula de RNA mensageiro (RNAm).` },
+    { topic: `Aula 2 • Síntese Proteica`, front: `O que acontece na tradução?`, back: `O ribossomo lê os códons do RNAm e, com auxílio do RNAt, une aminoácidos na ordem indicada para formar uma proteína.` },
+    { topic: `Aula 2 • Tipos de RNA`, front: `Qual é a função do RNAm?`, back: `Levar a informação copiada do DNA até o ribossomo. Sua sequência é lida em grupos de três bases chamados códons.` },
+    { topic: `Aula 2 • Tipos de RNA`, front: `Qual é a função do RNAr?`, back: `Compor a estrutura dos ribossomos, onde ocorre a síntese de proteínas.` },
+    { topic: `Aula 2 • Tipos de RNA`, front: `Qual é a função do RNAt?`, back: `Transportar aminoácidos até o ribossomo e reconhecer os códons do RNAm por meio de seu anticódon.` },
+    { topic: `Aula 2 • Código Genético`, front: `O que é um códon?`, back: `É uma sequência de três bases nitrogenadas no RNAm que especifica um aminoácido ou um sinal de início/fim da tradução.` },
+    { topic: `Aula 2 • Código Genético`, front: `O que é um anticódon?`, back: `É uma sequência de três bases do RNAt que se emparelha com um códon complementar do RNAm.` },
+    { topic: `Aula 2 • Proteínas`, front: `Do que são formadas as proteínas?`, back: `São moléculas formadas por cadeias de aminoácidos unidos entre si.` },
+    { topic: `Aula 3 • Eletroforese`, front: `O que é eletroforese em gel?`, back: `É uma técnica que separa fragmentos de DNA de acordo com seu tamanho, usando um campo elétrico e um gel poroso.` },
+    { topic: `Aula 3 • Eletroforese`, front: `Por que o DNA migra em direção ao polo positivo na eletroforese?`, back: `Porque o DNA possui carga elétrica negativa; por isso, é atraído pelo polo positivo quando submetido ao campo elétrico.` },
+    { topic: `Aula 3 • Eletroforese`, front: `Na eletroforese, quais fragmentos de DNA percorrem maior distância: os maiores ou os menores?`, back: `Os fragmentos <strong>menores</strong> atravessam os poros do gel com mais facilidade e migram mais rapidamente; os maiores ficam mais próximos do ponto de aplicação.` },
+    { topic: `Aula 3 • Marcadores STR`, front: `O que são marcadores STR?`, back: `São regiões do DNA com pequenas sequências de bases repetidas em sequência (Short Tandem Repeats). O número de repetições pode variar entre indivíduos.` },
+    { topic: `Aula 3 • Identificação Genética`, front: `Por que os STRs são úteis na identificação de pessoas?`, back: `Porque a quantidade de repetições varia entre indivíduos e é herdada dos pais. A análise de vários STRs permite construir um perfil genético individualizador.` },
+    { topic: `Aula 3 • Teste de Paternidade`, front: `Como as bandas de DNA são interpretadas em um teste de paternidade?`, back: `As bandas do filho devem ser explicadas pela herança dos pais. As bandas que não correspondem às da mãe devem coincidir com as do possível pai biológico.` },
+    { topic: `Aula 4 • Sequenciamento`, front: `O que significa sequenciar DNA?`, back: `É determinar a ordem exata das bases nitrogenadas (A, T, C e G) em um fragmento de DNA.` },
+    { topic: `Aula 4 • Método de Sanger`, front: `Como funciona o método de sequenciamento de Sanger?`, back: `Durante a cópia do DNA, nucleotídeos modificados fluorescentes (ddNTPs) interrompem a extensão em diferentes posições. A análise dos fragmentos permite deduzir a sequência das bases.` },
+    { topic: `Aula 4 • Método de Sanger`, front: `Qual é o papel dos ddNTPs no método de Sanger?`, back: `Eles são nucleotídeos modificados que, quando incorporados à cadeia, interrompem sua extensão. Como são identificáveis por fluorescência, ajudam a determinar a sequência.` },
+    { topic: `Aula 4 • Sequenciamento`, front: `Qual é a diferença entre analisar STRs e sequenciar DNA pelo método de Sanger?`, back: `A análise de <strong>STRs</strong> compara o número de repetições em regiões específicas do DNA. O método de <strong>Sanger</strong> determina a ordem exata das bases em um fragmento.` }
+  ];
+
+  // Em cada questão, a alternativa correta aparece em posições variadas.
+  const answerSets = [
+    { options: [`Aplicação de conhecimentos científicos para auxiliar investigações e a resolução de crimes.`, `Uso exclusivo de depoimentos para descobrir a autoria de crimes.`, `Estudo apenas dos comportamentos psicológicos de suspeitos.`, `Conjunto de leis que define as penas de cada crime.`], correct: 0 },
+    { options: [`Área que analisa somente impressões digitais.`, `Área que utiliza o DNA para analisar perfis genéticos e auxiliar na identificação de pessoas.`, `Técnica que identifica pessoas apenas pela aparência.`, `Estudo das doenças hereditárias sem relação com investigações.`], correct: 1 },
+    { options: [`Apenas ossos e impressões digitais, que não contêm material biológico.`, `Somente sangue e saliva.`, `Sangue, sêmen, saliva, células epiteliais e outros vestígios que possam conter material biológico.`, `Apenas objetos metálicos encontrados no local.`], correct: 2 },
+    { options: [`Genótipo são características observáveis; fenótipo é o conjunto de genes.`, `Os dois termos significam exatamente a mesma coisa.`, `Fenótipo é sempre independente do ambiente.`, `Genótipo é a constituição genética; fenótipo são características observáveis influenciadas por genes e ambiente.`], correct: 3 },
+    { options: [`Armazenar a informação genética dos seres vivos.`, `Produzir energia diretamente para todas as células.`, `Transportar oxigênio pelo sangue.`, `Formar a membrana que envolve as células.`], correct: 0 },
+    { options: [`Adenina–citosina e timina–guanina.`, `Adenina–timina e citosina–guanina.`, `Adenina–guanina e citosina–timina.`, `As quatro bases pareiam livremente, sem regra.`], correct: 1 },
+    { options: [`Uma célula inteira responsável pela hereditariedade.`, `Uma proteína que armazena cromossomos.`, `Um segmento de DNA com informação para produzir um produto funcional.`, `Uma sequência de aminoácidos sem relação com DNA.`], correct: 2 },
+    { options: [`Apenas as proteínas presentes no citoplasma.`, `Somente o DNA encontrado nas mitocôndrias.`, `O conjunto de características físicas de um organismo.`, `O conjunto completo do material genético, incluindo DNA nuclear e mitocondrial no ser humano.`], correct: 3 },
+    { options: [`Genoma é o material genético completo; código genético é o conjunto de regras que relaciona códons a aminoácidos.`, `Genoma e código genético são nomes diferentes para a mesma molécula.`, `Código genético é o conjunto de cromossomos; genoma é uma proteína.`, `Genoma existe apenas em bactérias.`], correct: 0 },
+    { options: [`Proteína → DNA → RNA.`, `DNA → RNA → proteína.`, `RNA → proteína → DNA, obrigatoriamente.`, `DNA → proteína → RNA.`], correct: 1 },
+    { options: [`A proteína é copiada para formar DNA.`, `O ribossomo transforma aminoácidos em DNA.`, `A informação de um trecho do DNA é copiada para formar RNA.`, `O RNA é convertido diretamente em lipídios.`], correct: 2 },
+    { options: [`O DNA é separado em aminoácidos no núcleo.`, `O RNAt é transformado em cromossomo.`, `O ribossomo copia proteínas para o DNA.`, `O ribossomo lê códons do RNAm e une aminoácidos para formar proteína.`], correct: 3 },
+    { options: [`Levar a informação copiada do DNA até o ribossomo.`, `Formar a parede celular.`, `Transportar oxigênio até os tecidos.`, `Armazenar lipídios no núcleo.`], correct: 0 },
+    { options: [`Transportar aminoácidos até o ribossomo.`, `Compor a estrutura dos ribossomos.`, `Copiar diretamente o DNA durante a divisão celular.`, `Formar a membrana plasmática.`], correct: 1 },
+    { options: [`Compor a membrana nuclear.`, `Levar a informação genética para fora do organismo.`, `Transportar aminoácidos ao ribossomo e reconhecer códons por meio do anticódon.`, `Duplicar os cromossomos durante a mitose.`], correct: 2 },
+    { options: [`Uma sequência de três aminoácidos no DNA.`, `Uma proteína que transporta o RNAm.`, `Uma região repetitiva do cromossomo.`, `Uma sequência de três bases do RNAm que especifica aminoácido ou sinal de início/fim.`], correct: 3 },
+    { options: [`Três bases do RNAt que se emparelham com um códon complementar do RNAm.`, `Três aminoácidos ligados em uma proteína.`, `Uma sequência de bases exclusiva do DNA mitocondrial.`, `Uma enzima que corta o DNA.`], correct: 0 },
+    { options: [`Açúcares simples unidos em cadeia.`, `Cadeias de aminoácidos unidos entre si.`, `Apenas moléculas de DNA enroladas.`, `Ácidos graxos unidos a sais minerais.`], correct: 1 },
+    { options: [`Uma técnica que multiplica células por calor.`, `Um método que identifica proteínas pela cor.`, `Uma técnica que separa fragmentos de DNA de acordo com o tamanho usando campo elétrico e gel.`, `Um processo que altera a sequência das bases do DNA.`], correct: 2 },
+    { options: [`Porque o DNA tem carga positiva e é atraído pelo polo negativo.`, `Porque o gel empurra todos os fragmentos para qualquer direção.`, `Porque o DNA não possui carga elétrica.`, `Porque o DNA tem carga negativa e é atraído pelo polo positivo.`], correct: 3 },
+    { options: [`Os menores, pois atravessam os poros do gel com mais facilidade e migram mais rapidamente.`, `Os maiores, porque têm mais bases e sempre correm mais rápido.`, `Todos percorrem exatamente a mesma distância.`, `Nenhum fragmento se movimenta no gel.`], correct: 0 },
+    { options: [`Genes que produzem proteínas fluorescentes.`, `Regiões do DNA com pequenas sequências repetidas em sequência, cujo número pode variar entre indivíduos.`, `Partes do RNA que formam os ribossomos.`, `Fragmentos de DNA que não apresentam repetições.`], correct: 1 },
+    { options: [`Porque são idênticos em todas as pessoas.`, `Porque indicam diretamente a idade de uma pessoa.`, `Porque o número de repetições varia entre indivíduos e é herdado dos pais.`, `Porque substituem a análise de todo o material biológico.`], correct: 2 },
+    { options: [`Todas as bandas do filho devem estar ausentes nos pais.`, `As bandas do filho devem coincidir somente com as da mãe.`, `A paternidade é confirmada pela aparência física.`, `As bandas do filho devem ser explicadas pela herança dos pais; as não correspondentes à mãe devem coincidir com as do possível pai.`], correct: 3 },
+    { options: [`Determinar a ordem exata das bases A, T, C e G em um fragmento de DNA.`, `Contar o número de células de uma amostra.`, `Separar proteínas pelo tamanho.`, `Identificar o formato de um cromossomo sem analisar suas bases.`], correct: 0 },
+    { options: [`As bases são removidas aleatoriamente e descartadas.`, `ddNTPs interrompem a extensão em diferentes posições; a análise dos fragmentos permite deduzir a sequência.`, `O DNA é convertido em RNA e depois em proteína.`, `O método conta apenas quantos cromossomos existem.`], correct: 1 },
+    { options: [`Aumentar a velocidade da tradução no ribossomo.`, `Unir dois cromossomos inteiros.`, `Interromper a extensão da cadeia quando incorporados, permitindo analisar os fragmentos.`, `Transformar timina em uracila no DNA.`], correct: 2 },
+    { options: [`STR determina toda a sequência do genoma; Sanger conta apenas repetições.`, `Ambos medem somente o tamanho das células.`, `Sanger identifica pessoas sem analisar DNA.`, `STR compara o número de repetições em regiões específicas; Sanger determina a ordem das bases em um fragmento.`], correct: 3 }
+  ];
+
+  let cards = [...originalCards];
+  let currentIndex = 0;
+  let isFlipped = false;
+  let correctScore = 0;
+  let wrongScore = 0;
+  let answeredCards = new Map();
+
+  const cardElement = document.getElementById('cardElement');
+  const frontText = document.getElementById('frontText');
+  const backText = document.getElementById('backText');
+  const choicesContainer = document.getElementById('choicesContainer');
+  const choiceFeedback = document.getElementById('choiceFeedback');
+  const counter = document.getElementById('counter');
+  const topicTag = document.getElementById('topicTag');
+  const progressFill = document.getElementById('progressFill');
+  const correctCount = document.getElementById('correctCount');
+  const wrongCount = document.getElementById('wrongCount');
+
+  function renderCard() {
+    isFlipped = false;
+    cardElement.classList.remove('is-flipped');
+
+    setTimeout(() => {
+      const current = cards[currentIndex];
+      frontText.innerHTML = current.front;
+      backText.innerHTML = current.back;
+      choiceFeedback.textContent = '';
+      choicesContainer.innerHTML = '';
+      const set = answerSets[originalCards.indexOf(current)];
+      set.options.forEach((option, optionIndex) => {
+        const button = document.createElement('button');
+        button.className = 'choice-btn';
+        button.textContent = `${String.fromCharCode(65 + optionIndex)}) ${option}`;
+        button.type = 'button';
+        button.onclick = (event) => { event.stopPropagation(); chooseAnswer(optionIndex); };
+        choicesContainer.appendChild(button);
+      });
+      topicTag.textContent = current.topic;
+      counter.textContent = `${currentIndex + 1} / ${cards.length}`;
+      progressFill.style.width = `${((currentIndex + 1) / cards.length) * 100}%`;
+    }, 150);
+  }
+
+  function flipCard() {
+    isFlipped = !isFlipped;
+    cardElement.classList.toggle('is-flipped', isFlipped);
+  }
+
+  function nextCard() {
+    currentIndex = (currentIndex + 1) % cards.length;
+    renderCard();
+  }
+
+  function prevCard() {
+    currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+    renderCard();
+  }
+
+  function chooseAnswer(selectedIndex) {
+    if (answeredCards.has(currentIndex)) return;
+    const set = answerSets[originalCards.indexOf(cards[currentIndex])];
+    const buttons = [...choicesContainer.querySelectorAll('button')];
+    buttons.forEach((button, index) => {
+      button.disabled = true;
+      if (index === set.correct) button.classList.add('reveal-correct');
+      if (index === selectedIndex && index === set.correct) button.classList.add('selected-correct');
+      if (index === selectedIndex && index !== set.correct) button.classList.add('selected-wrong');
+    });
+    if (selectedIndex === set.correct) {
+      correctScore++;
+      correctCount.textContent = correctScore;
+      choiceFeedback.textContent = '✅ Correto! Vire o card para conferir a explicação.';
+    } else {
+      wrongScore++;
+      wrongCount.textContent = wrongScore;
+      choiceFeedback.textContent = `❌ Não foi dessa vez. A correta é ${String.fromCharCode(65 + set.correct)}. Vire o card para ver a explicação.`;
+    }
+    answeredCards.set(currentIndex, selectedIndex);
+  }
+
+  function resetStats() {
+    correctScore = 0;
+    wrongScore = 0;
+    correctCount.textContent = '0';
+    wrongCount.textContent = '0';
+    answeredCards.clear();
+    currentIndex = 0;
+    renderCard();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      flipCard();
+    } else if (e.code === 'ArrowRight') {
+      nextCard();
+    } else if (e.code === 'ArrowLeft') {
+      prevCard();
+    }
+  });
+
+  renderCard();
+</script>
+
+</body>
+</html>

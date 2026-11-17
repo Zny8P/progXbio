@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards - Genética Forense e Biologia Molecular</title>
+<style>
+  :root {
+    --bg: #09090b;
+    --card-front: #18181b;
+    --card-back: #b91c1c;
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --accent: #ef4444;
+    --btn-bg: #27272a;
+    --btn-hover: #3f3f46;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 600px;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .stat-correct {
+    color: #4ade80;
+  }
+
+  .stat-wrong {
+    color: #f87171;
+  }
+
+  .progress-container {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #18181b;
+    border-radius: 99px;
+    margin: 0 12px;
+    overflow: hidden;
+    border: 1px solid #27272a;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 10%;
+    transition: width 0.3s ease;
+  }
+
+  /* Flashcard 3D Flip */
+  .scene {
+    width: 100%;
+    max-width: 560px;
+    height: 320px;
+    perspective: 1000px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .card-front {
+    background: linear-gradient(145deg, #18181b, #0f0f12);
+  }
+
+  .card-back {
+    background: linear-gradient(145deg, #991b1b, #dc2626);
+    transform: rotateY(180deg);
+  }
+
+  .badge {
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 12px;
+    border-radius: 99px;
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .card-front .badge {
+    color: var(--accent);
+  }
+
+  .card-back .badge {
+    color: #fef2f2;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .card-content {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    text-align: center;
+    margin: auto 0;
+    font-weight: 500;
+    overflow-y: auto;
+    max-height: 190px;
+    padding: 4px;
+  }
+
+  .card-back .card-content {
+    font-size: 1.05rem;
+    font-weight: 400;
+  }
+
+  .card-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    padding: 12px 14px;
+    border: none;
+    border-radius: 12px;
+    background-color: var(--btn-bg);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    user-select: none;
+  }
+
+  button:hover {
+    background-color: var(--btn-hover);
+  }
+
+  button:active {
+    transform: scale(0.97);
+  }
+
+  .btn-flip {
+    background-color: var(--accent);
+    color: #ffffff;
+    flex: 1.3;
+  }
+
+  .btn-flip:hover {
+    background-color: #f87171;
+  }
+
+  .score-controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .btn-wrong {
+    flex: 1;
+    background-color: #450a0a;
+    color: #fca5a5;
+    border: 1px solid #7f1d1d;
+  }
+
+  .btn-wrong:hover {
+    background-color: #7f1d1d;
+    color: #fff;
+  }
+
+  .btn-correct {
+    flex: 1;
+    background-color: #052e16;
+    color: #86efac;
+    border: 1px solid #14532d;
+  }
+
+  .btn-correct:hover {
+    background-color: #14532d;
+    color: #fff;
+  }
+
+  .shuffle-row {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid #27272a;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 9px 14px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--text-main);
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  @media (max-width: 480px) {
+    .scene {
+      height: 340px;
+    }
+    .card-face {
+      padding: 18px 14px;
+    }
+    .card-content {
+      font-size: 1.05rem;
+    }
+    .card-back .card-content {
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 11px 8px;
+      font-size: 0.88rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Genética Forense & Biologia Molecular</h1>
+    <p>3ª Série EM • Aulas 1 a 4 (4º Bimestre)</p>
+  </div>
+
+  <div class="stats-bar">
+    <span class="stat-correct">Acertos: <strong id="correctCount">0</strong></span>
+    <span style="color: #52525b;">|</span>
+    <span class="stat-wrong">Erros: <strong id="wrongCount">0</strong></span>
+  </div>
+
+  <div class="progress-container">
+    <span id="counter">1 / 10</span>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span id="topicTag">Aula 1</span>
+  </div>
+
+  <div class="scene" id="cardScene" onclick="flipCard()">
+    <div class="card" id="cardElement">
+      <div class="card-face card-front">
+        <span class="badge">Pergunta</span>
+        <div class="card-content" id="frontText"></div>
+        <div class="card-hint">Toque ou clique para ver a resposta</div>
+      </div>
+      <div class="card-face card-back">
+        <span class="badge">Resposta</span>
+        <div class="card-content" id="backText"></div>
+        <div class="card-hint">Toque ou clique para voltar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevCard()">&#8592; Anterior</button>
+    <button class="btn-flip" onclick="flipCard()">Virar Card</button>
+    <button onclick="nextCard()">Próximo &#8594;</button>
+  </div>
+
+  <div class="score-controls">
+    <button class="btn-wrong" onclick="markScore('wrong')">❌ Errei</button>
+    <button class="btn-correct" onclick="markScore('correct')">✅ Acertei</button>
+  </div>
+
+  <div class="shuffle-row">
+    <button class="btn-secondary" onclick="resetStats()">🔄 Reiniciar Progresso</button>
+  </div>
+
+<script>
+  const originalCards = [
+    {
+      topic: "Aula 1 • Conceitos Base",
+      front: "Qual é a diferença entre Genótipo e Fenótipo?",
+      back: "<strong>Genótipo</strong> é o conjunto de genes (constituição de alelos) de um indivíduo.<br><br><strong>Fenótipo</strong> são as características morfológicas, fisiológicas e comportamentais observáveis, resultantes da interação do genótipo com o ambiente."
+    },
+    {
+      topic: "Aula 1 • Conceitos Base",
+      front: "O que é o Genoma humano e quais tipos de DNA o compõem?",
+      back: "É o conjunto de toda a informação genética de um ser humano, composto pelo <strong>DNA nuclear</strong> (genes codificantes e sequências não codificantes) e pelo <strong>DNA mitocondrial</strong>."
+    },
+    {
+      topic: "Aula 1 • Genética Forense",
+      front: "O que é a Genética Forense e quais vestígios biológicos ela analisa?",
+      back: "É a área da ciência forense que analisa o DNA para gerar um <strong>perfil genético</strong> único e identificar pessoas.<br><br>Utiliza vestígios como sangue, sêmen, saliva, células epiteliais, fios de cabelo com raiz, dentes, urina ou fezes."
+    },
+    {
+      topic: "Aula 2 • Síntese Proteica",
+      front: "Quais são as duas etapas da síntese de proteínas e o que ocorre em cada uma?",
+      back: "1. <strong>Transcrição:</strong> cópia da informação genética de um trecho do DNA para formar uma molécula de RNAm.<br><br>2. <strong>Tradução:</strong> leitura e interpretação dos códons do RNAm nos ribossomos para unir aminoácidos e formar uma proteína."
+    },
+    {
+      topic: "Aula 2 • Tipos de RNA",
+      front: "Qual é a função de cada um dos três tipos de RNA (RNAm, RNAr e RNAt) na síntese proteica?",
+      back: "• <strong>RNAm (mensageiro):</strong> leva a cópia da receita do DNA até o ribossomo (códons).<br>• <strong>RNAr (ribossômico):</strong> compõe a estrutura dos ribossomos.<br>• <strong>RNAt (transportador):</strong> carrega os aminoácidos específicos até o ribossomo (anticódons)."
+    },
+    {
+      topic: "Aula 2 • Perícia Molecular",
+      front: "Como os peritos identificam qual tipo de fluido biológico (sangue, saliva ou sêmen) está em uma amostra?",
+      back: "Pelo rastreamento de <strong>RNAm</strong> (genes ativos no tecido) ou proteínas específicas:<br>• <strong>Sangue:</strong> Hemoglobina (liga-se ao ferro).<br>• <strong>Sêmen:</strong> Antígeno Prostático Específico (PSA).<br>• <strong>Saliva:</strong> Amilase salivar."
+    },
+    {
+      topic: "Aula 3 • Marcadores STR",
+      front: "O que são marcadores STR (Short Tandem Repeats) e por que são usados na perícia?",
+      back: "São regiões específicas do DNA formadas por <strong>sequências curtas e repetidas</strong> em série (não codificantes).<br><br>Como a quantidade de repetições varia entre pessoas e é herdada dos pais, analisar de 10 a 20 STRs gera uma 'impressão digital genética' única."
+    },
+    {
+      topic: "Aula 3 • Eletroforese",
+      front: "Como funciona a técnica de eletroforese em gel para separar fragmentos de DNA?",
+      back: "O DNA possui <strong>carga elétrica negativa</strong> e, sob um campo elétrico, migra do polo negativo para o polo positivo através de um gel poroso.<br><br><strong>Fragmentos menores</strong> passam mais rápido pelos poros do gel; fragmentos maiores ficam mais atrás."
+    },
+    {
+      topic: "Aula 3 • Teste de Paternidade",
+      front: "Como interpretar o padrão de bandas de eletroforese em um exame de paternidade?",
+      back: "Todas as bandas de DNA presentes no filho devem ter origem biológica nos pais: as bandas que <strong>não vierem da mãe</strong> precisam coincidir obrigatoriamente com as bandas do <strong>pai biológico</strong>."
+    },
+    {
+      topic: "Aula 4 • Sequenciamento",
+      front: "Como funciona o Método de Sanger e qual sua vantagem sobre os marcadores STR?",
+      back: "Usa nucleotídeos modificados fluorescentes (<strong>ddNTPs</strong>) que interrompem a cópia do DNA em diferentes tamanhos, permitindo ler a <strong>ordem exata das bases (A, T, C, G)</strong>.<br><br>Vantagem: detecta variações pontuais nas bases com alta precisão, mesmo quando o DNA está degradado ou o teste STR é inconclusivo."
+    }
+  ];
+
+  let cards = [...originalCards];
+  let currentIndex = 0;
+  let isFlipped = false;
+  let correctScore = 0;
+  let wrongScore = 0;
+  let answeredCards = new Set();
+
+  const cardElement = document.getElementById('cardElement');
+  const frontText = document.getElementById('frontText');
+  const backText = document.getElementById('backText');
+  const counter = document.getElementById('counter');
+  const topicTag = document.getElementById('topicTag');
+  const progressFill = document.getElementById('progressFill');
+  const correctCount = document.getElementById('correctCount');
+  const wrongCount = document.getElementById('wrongCount');
+
+  function renderCard() {
+    isFlipped = false;
+    cardElement.classList.remove('is-flipped');
+
+    setTimeout(() => {
+      const current = cards[currentIndex];
+      frontText.innerHTML = current.front;
+      backText.innerHTML = current.back;
+      topicTag.textContent = current.topic;
+      counter.textContent = `${currentIndex + 1} / ${cards.length}`;
+      progressFill.style.width = `${((currentIndex + 1) / cards.length) * 100}%`;
+    }, 150);
+  }
+
+  function flipCard() {
+    isFlipped = !isFlipped;
+    cardElement.classList.toggle('is-flipped', isFlipped);
+  }
+
+  function nextCard() {
+    currentIndex = (currentIndex + 1) % cards.length;
+    renderCard();
+  }
+
+  function prevCard() {
+    currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+    renderCard();
+  }
+
+  function markScore(type) {
+    if (!answeredCards.has(currentIndex)) {
+      answeredCards.add(currentIndex);
+      if (type === 'correct') {
+        correctScore++;
+        correctCount.textContent = correctScore;
+      } else {
+        wrongScore++;
+        wrongCount.textContent = wrongScore;
+      }
+    } else {
+      // Se já respondeu esse card, apenas atualiza
+      if (type === 'correct') {
+        // Se mudou de ideia
+      }
+    }
+    
+    // Vai automaticamente para o próximo após marcar
+    if (currentIndex < cards.length - 1) {
+      nextCard();
+    } else {
+      alert(`🎉 Você concluiu todos os flashcards!\n\nAcertos: ${correctScore}\nErros: ${wrongScore}`);
+    }
+  }
+
+  function resetStats() {
+    correctScore = 0;
+    wrongScore = 0;
+    correctCount.textContent = '0';
+    wrongCount.textContent = '0';
+    answeredCards.clear();
+    currentIndex = 0;
+    renderCard();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      flipCard();
+    } else if (e.code === 'ArrowRight') {
+      nextCard();
+    } else if (e.code === 'ArrowLeft') {
+      prevCard();
+    }
+  });
+
+  frontText.innerHTML = cards[0].front;
+  backText.innerHTML = cards[0].back;
+  topicTag.textContent = cards[0].topic;
+</script>
+
+</body>
+</html>

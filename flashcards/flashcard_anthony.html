@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Flashcards — Genética Forense</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --panel: #131f33;
+  --panel2: #1b2b45;
+  --text: #eef4ff;
+  --muted: #a9b8cf;
+  --accent: #69d3c2;
+  --line: rgba(255,255,255,.12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; padding: 24px 16px 40px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: radial-gradient(ellipse at top, #1a2b47 0%, var(--bg) 58%);
+}
+main { width: min(760px, 100%); margin: 0 auto; }
+header { text-align: center; margin: 8px 0 24px; }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font-size: .75rem; font-weight: 700; }
+h1 { margin: 8px 0; font-size: clamp(1.7rem, 5vw, 2.5rem); }
+header p { color: var(--muted); margin: 0; }
+.progress-wrap { height: 7px; background: rgba(255,255,255,.1); border-radius: 20px; overflow: hidden; margin: 22px 0 8px; }
+#progress { height: 100%; width: 10%; background: var(--accent); transition: width .25s ease; }
+.status { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .9rem; }
+.card-area { perspective: 1200px; margin: 22px 0 18px; }
+.card {
+  position: relative; width: 100%; min-height: 300px; cursor: pointer;
+  transform-style: preserve-3d; transition: transform .55s ease;
+  outline: none;
+}
+.card.flipped { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0; min-height: 300px; padding: clamp(24px, 6vw, 48px);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; border: 1px solid var(--line); border-radius: 24px;
+  background: linear-gradient(145deg, var(--panel2), var(--panel));
+  box-shadow: 0 18px 45px rgba(0,0,0,.25); backface-visibility: hidden;
+}
+.back { transform: rotateY(180deg); background: linear-gradient(145deg, #173b45, #14283a); }
+.face small { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.face h2 { font-size: clamp(1.25rem, 4vw, 1.8rem); line-height: 1.35; margin: 18px 0; }
+.face p { color: var(--muted); line-height: 1.65; font-size: clamp(1rem, 2.7vw, 1.15rem); max-width: 570px; margin: 0; }
+.hint { margin-top: 22px; color: var(--muted); font-size: .85rem; }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button {
+  border: 1px solid var(--line); border-radius: 13px; padding: 13px 16px;
+  color: var(--text); background: #1a2940; font: inherit; font-weight: 650;
+  cursor: pointer; min-height: 48px;
+}
+button.primary { background: var(--accent); color: #08201e; border-color: transparent; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+.actions { display: flex; gap: 10px; margin-top: 10px; }
+.actions button { flex: 1; background: transparent; color: var(--muted); }
+footer { color: var(--muted); text-align: center; font-size: .82rem; margin-top: 24px; line-height: 1.5; }
+@media (max-width: 420px) {
+  body { padding: 18px 12px 30px; }
+  .card, .face { min-height: 340px; }
+  .controls { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .card, #progress { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Biologia · 3ª série do Ensino Médio</div>
+    <h1>Genética Forense</h1>
+    <p>10 flashcards para revisar o conteúdo dos quatro slides.</p>
+  </header>
+
+  <div class="progress-wrap"><div id="progress"></div></div>
+  <div class="status"><span id="counter">Cartão 1 de 10</span><span id="side">Pergunta</span></div>
+
+  <section class="card-area">
+    <article class="card" id="card" tabindex="0" role="button" aria-label="Virar flashcard" aria-pressed="false">
+      <div class="face front">
+        <small id="front-label">Flashcard 01</small>
+        <h2 id="question"></h2>
+        <div class="hint">Toque ou clique para revelar a resposta</div>
+      </div>
+      <div class="face back">
+        <small>Resposta</small>
+        <p id="answer"></p>
+        <div class="hint">Toque novamente para voltar à pergunta</div>
+      </div>
+    </article>
+  </section>
+
+  <div class="controls">
+    <button id="prev" type="button">← Anterior</button>
+    <button class="primary" id="next" type="button">Próximo →</button>
+  </div>
+  <div class="actions">
+    <button id="shuffle" type="button">Embaralhar</button>
+    <button id="reset" type="button">Recomeçar</button>
+  </div>
+
+  <footer>
+    Dica: tente responder mentalmente antes de virar o cartão.<br>
+    Arquivo único: funciona offline em celulares e computadores.
+  </footer>
+</main>
+
+<script>
+const originalCards = [
+  {
+    q: "O que é ciência forense?",
+    a: "É a aplicação de métodos e conhecimentos científicos para auxiliar na investigação e na solução de crimes."
+  },
+  {
+    q: "Qual é a diferença entre genótipo e fenótipo?",
+    a: "Genótipo é o conjunto de genes do indivíduo. Fenótipo reúne características morfológicas, fisiológicas e comportamentais, resultantes do genótipo e da interação com o ambiente."
+  },
+  {
+    q: "O que é genética forense e o que ela analisa?",
+    a: "Analisa DNA de pessoas ou vestígios biológicos para gerar perfis genéticos e auxiliar na identificação de indivíduos."
+  },
+  {
+    q: "Quais são as etapas da síntese de proteínas?",
+    a: "Transcrição: a informação do gene é copiada para RNA. Tradução: essa informação é interpretada para formar uma proteína."
+  },
+  {
+    q: "Quais são as funções do RNAm e do RNAt na tradução?",
+    a: "O RNAm leva a informação genética ao ribossomo em códons. O RNAt transporta os aminoácidos correspondentes por meio de seus anticódons."
+  },
+  {
+    q: "O que é eletroforese e como ela separa fragmentos?",
+    a: "É uma técnica que separa fragmentos de DNA, RNA ou proteínas em um meio poroso, geralmente gel, sob um campo elétrico. Fragmentos menores se deslocam mais rapidamente."
+  },
+  {
+    q: "O que são marcadores STR e para que servem?",
+    a: "São regiões do DNA com sequências curtas e repetidas, herdadas dos progenitores. Suas variações ajudam a compor perfis genéticos usados na identificação e em testes de paternidade."
+  },
+  {
+    q: "Como o teste de DNA pode auxiliar na investigação de paternidade?",
+    a: "Comparam-se os padrões de DNA da mãe, da criança e do suposto pai. As bandas da criança devem ser compatíveis com contribuições genéticas dos dois progenitores."
+  },
+  {
+    q: "O que é sequenciamento genético?",
+    a: "É a técnica que identifica a ordem exata dos nucleotídeos do DNA: adenina, timina, citosina e guanina."
+  },
+  {
+    q: "Como funciona o método de Sanger?",
+    a: "A DNA polimerase sintetiza fragmentos a partir de um primer. Nucleotídeos modificados e fluorescentes interrompem a cópia; depois, a eletroforese separa os fragmentos e sua leitura revela a sequência."
+  }
+];
+
+let cards = [...originalCards];
+let index = 0;
+const card = document.getElementById("card");
+const question = document.getElementById("question");
+const answer = document.getElementById("answer");
+const counter = document.getElementById("counter");
+const side = document.getElementById("side");
+const progress = document.getElementById("progress");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
+
+function render() {
+  card.classList.remove("flipped");
+  card.setAttribute("aria-pressed", "false");
+  question.textContent = cards[index].q;
+  answer.textContent = cards[index].a;
+  counter.textContent = `Cartão ${index + 1} de ${cards.length}`;
+  side.textContent = "Pergunta";
+  document.getElementById("front-label").textContent = `Flashcard ${String(index + 1).padStart(2, "0")}`;
+  progress.style.width = `${((index + 1) / cards.length) * 100}%`;
+  prev.disabled = index === 0;
+  next.textContent = index === cards.length - 1 ? "Finalizar ✓" : "Próximo →";
+}
+function flip() {
+  const flipped = card.classList.toggle("flipped");
+  card.setAttribute("aria-pressed", String(flipped));
+  side.textContent = flipped ? "Resposta" : "Pergunta";
+}
+card.addEventListener("click", flip);
+card.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
+});
+prev.addEventListener("click", () => { if (index > 0) { index--; render(); } });
+next.addEventListener("click", () => {
+  if (index < cards.length - 1) { index++; render(); }
+  else { index = 0; render(); }
+});
+document.getElementById("shuffle").addEventListener("click", () => {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  index = 0; render();
+});
+document.getElementById("reset").addEventListener("click", () => {
+  cards = [...originalCards]; index = 0; render();
+});
+render();
+</script>
+</body>
+</html>

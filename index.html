@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e5e7eb">
+  <title>Flashcards de Genética Forense</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --accent: #087f6b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 18px;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 52%, #d1d5db 100%);
+    }
+
+    main { width: min(900px, 100%); }
+
+    header { margin-bottom: 32px; text-align: center; }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: clamp(2rem, 6vw, 3rem);
+    }
+
+    header p { margin: 0; color: var(--muted); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: 16px;
+    }
+
+    .person-card {
+      min-height: 170px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: inherit;
+      text-decoration: none;
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border: 1px solid #d1d5db;
+      border-radius: 20px;
+      box-shadow: 0 14px 34px rgba(31, 41, 55, .1);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+
+    .person-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    .person-card:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    .initial {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: var(--accent);
+      border-radius: 13px;
+      font-weight: 800;
+    }
+
+    h2 { margin: 20px 0 4px; font-size: 1.35rem; }
+
+    .open { color: var(--muted); font-size: .92rem; }
+    .arrow { color: var(--accent); font-weight: 800; }
+
+    footer {
+      margin-top: 28px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .88rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .person-card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Biologia · Material de revisão</div>
+      <h1>Flashcards</h1>
+      <p>Escolha um conjunto para estudar genética forense.</p>
+    </header>
+
+    <section class="cards" aria-label="Conjuntos de flashcards">
+      <a class="person-card" href="flashcards/flashcard_anthony.html">
+        <span class="initial" aria-hidden="true">A</span>
+        <div>
+          <h2>Anthony</h2>
+          <span class="open">Abrir flashcards <span class="arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+      <a class="person-card" href="flashcards/flashcard_tiago.html">
+        <span class="initial" aria-hidden="true">T</span>
+        <div>
+          <h2>Tiago</h2>
+          <span class="open">Abrir flashcards <span class="arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+      <a class="person-card" href="flashcards/flashcard_joao.html">
+        <span class="initial" aria-hidden="true">J</span>
+        <div>
+          <h2>João</h2>
+          <span class="open">Abrir flashcards <span class="arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+      <a class="person-card" href="flashcards/flashcard_josemario.html">
+        <span class="initial" aria-hidden="true">JM</span>
+        <div>
+          <h2>José Mário</h2>
+          <span class="open">Abrir flashcards <span class="arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+      <a class="person-card" href="flashcards/flashcard_murilo.html">
+        <span class="initial" aria-hidden="true">M</span>
+        <div>
+          <h2>Murilo</h2>
+          <span class="open">Abrir flashcards <span class="arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+    </section>
+
+    <footer>Os arquivos de flashcards continuam separados e podem ser acessados por esta página.</footer>
+  </main>
+</body>
+</html>

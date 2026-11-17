@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#075985">
+<title>Flashcards — Genética Forense e Biologia Molecular</title>
+<style>
+:root {
+  --blue: #075985; --blue2: #0ea5e9; --ink: #142235;
+  --muted: #5b6b7c; --paper: #f3f7fb; --white: #fff;
+  --green: #dff7ec; --line: #d9e4ee;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; padding: 22px 14px 36px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--ink); background: linear-gradient(145deg,#eaf5ff,#f7fafc 55%,#e8f3fb);
+}
+main { width: min(760px, 100%); margin: 0 auto; }
+header { text-align: center; margin: 8px 0 22px; }
+.eyebrow { color: var(--blue); font-weight: 800; letter-spacing: .09em; text-transform: uppercase; font-size: .76rem; }
+h1 { margin: 8px 0; font-size: clamp(1.55rem,5vw,2.25rem); line-height: 1.15; }
+header p { margin: 8px auto 0; max-width: 560px; color: var(--muted); }
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin: 18px 2px 12px; }
+.count { font-weight: 750; color: var(--blue); font-variant-numeric: tabular-nums; }
+.progress { height: 7px; border-radius: 99px; background:#dbe7f1; overflow:hidden; margin: 0 2px 18px; }
+.progress span { display:block; height:100%; width:0; background:var(--blue2); transition:width .2s; }
+.card-wrap { perspective: 1100px; }
+.card {
+  display:block; width:100%; min-height: 310px; position:relative; cursor:pointer;
+  border:0; background:transparent; padding:0; text-align:left;
+  perspective: 1100px; -webkit-tap-highlight-color: transparent;
+}
+.inner {
+  display:block; position:relative; min-height:310px; width:100%;
+  transform-style:preserve-3d; transition:transform .5s;
+}
+.card.flipped .inner { transform:rotateY(180deg); }
+.face {
+  display:flex; position:absolute; inset:0; min-height:310px; padding: clamp(24px,6vw,44px);
+  border-radius:24px; display:flex; flex-direction:column; justify-content:center;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  box-shadow:0 16px 40px rgba(23,55,83,.12);
+}
+.front { color:white; background:linear-gradient(140deg,#075985,#0b75a8); }
+.back { background:white; border:1px solid var(--line); transform:rotateY(180deg); }
+.side-label { font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.8; margin-bottom:18px; }
+.question, .answer { font-size:clamp(1.35rem,4.8vw,2rem); line-height:1.35; font-weight:750; }
+.back .answer { font-size:clamp(1.15rem,4vw,1.55rem); font-weight:650; }
+.hint { margin-top:24px; font-size:.9rem; opacity:.8; }
+.actions { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:18px; }
+button.control {
+  border:1px solid var(--line); border-radius:14px; background:white; color:var(--ink);
+  padding:13px 10px; font:inherit; font-weight:700; cursor:pointer;
+}
+button.control.primary { background:var(--blue); color:white; border-color:var(--blue); }
+button.control:disabled { opacity:.4; cursor:not-allowed; }
+button:focus-visible { outline:3px solid #f59e0b; outline-offset:3px; }
+.footer { text-align:center; margin-top:18px; color:var(--muted); font-size:.88rem; }
+kbd { background:#e5edf5; border-radius:5px; padding:2px 6px; }
+@media (max-width:480px) {
+  body { padding:15px 12px 28px; }
+  .card,.inner,.face { min-height:330px; }
+  .actions { grid-template-columns:1fr 1fr; }
+  .actions .primary { grid-column:1 / -1; grid-row:1; }
+  button.control { padding:12px 7px; font-size:.9rem; }
+}
+@media (prefers-reduced-motion:reduce) { .inner,.progress span { transition:none; } }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Material de revisão</div>
+  <h1>Genética Forense e Biologia Molecular</h1>
+  <p>Flashcards baseados nos slides: do DNA às proteínas. Toque no cartão para revelar a resposta.</p>
+</header>
+<div class="toolbar">
+  <span class="count" id="counter" aria-live="polite">Cartão 1 de 28</span>
+  <span class="count" id="status">Pergunta</span>
+</div>
+<div class="progress" aria-hidden="true"><span id="bar"></span></div>
+<div class="card-wrap">
+  <button class="card" id="card" type="button" aria-label="Virar cartão para revelar a resposta">
+    <span class="inner">
+      <span class="face front">
+        <span class="side-label">Pergunta</span>
+        <span class="question" id="question"></span>
+        <span class="hint">Toque para ver a resposta ↻</span>
+      </span>
+      <span class="face back">
+        <span class="side-label">Resposta</span>
+        <span class="answer" id="answer"></span>
+        <span class="hint" style="color:#5b6b7c">Toque para voltar à pergunta ↻</span>
+      </span>
+    </span>
+  </button>
+</div>
+<div class="actions">
+  <button class="control" id="prev" type="button">← Anterior</button>
+  <button class="control primary" id="flip" type="button">Ver resposta</button>
+  <button class="control" id="next" type="button">Próximo →</button>
+</div>
+<div class="actions" style="grid-template-columns:1fr 1fr">
+  <button class="control" id="shuffle" type="button">Embaralhar</button>
+  <button class="control" id="restart" type="button">Recomeçar</button>
+</div>
+<p class="footer">Dica: tente responder em voz alta antes de virar o cartão. Funciona offline após salvar este arquivo.</p>
+</main>
+<script>
+const original = [{"q": "O que são genes?", "a": "São sequências de nucleotídeos do DNA que contêm informações para a síntese de proteínas."}, {"q": "Como as análises moleculares ajudam na genética forense?", "a": "Detectam genes ativos e proteínas presentes na amostra biológica."}, {"q": "O que diferencia geneticamente células, tecidos e órgãos?", "a": "Os genes que estão ativos em cada tipo celular."}, {"q": "O que é expressão gênica, segundo os slides?", "a": "É a atividade dos genes que sintetizam RNA mensageiro (RNAm)."}, {"q": "Para que serve o rastreamento de RNAm na perícia?", "a": "Permite identificar quais genes estão ativos e inferir o tipo de material biológico analisado."}, {"q": "O que ajuda a identificar um indivíduo?", "a": "Variações específicas no DNA."}, {"q": "O que ajuda a detectar o tipo de material biológico?", "a": "O RNAm, que indica quais genes estão ativos."}, {"q": "Do que são formadas as proteínas?", "a": "De longas cadeias de aminoácidos organizadas em diferentes níveis estruturais."}, {"q": "Qual é a unidade básica das proteínas?", "a": "O aminoácido."}, {"q": "Quais funções das proteínas aparecem nos slides?", "a": "Enzimas, anticorpos, sustentação e movimento, e sinalização celular."}, {"q": "Quais são as duas etapas da síntese de proteínas?", "a": "Transcrição e tradução."}, {"q": "O que acontece na transcrição?", "a": "A informação dos genes no DNA é copiada para RNA."}, {"q": "O que acontece na tradução?", "a": "A informação do RNAm é interpretada no ribossomo para formar uma proteína."}, {"q": "Como é formada a molécula de DNA?", "a": "Por duas fitas de nucleotídeos espiralizadas."}, {"q": "Quais são os pares de bases do DNA?", "a": "Adenina (A) com Timina (T); Citosina (C) com Guanina (G)."}, {"q": "Como é formado o RNA?", "a": "Por uma fita de nucleotídeos copiada de uma sequência do DNA."}, {"q": "Quais são os pares de bases indicados para o RNA?", "a": "Adenina (A) com Uracila (U); Citosina (C) com Guanina (G)."}, {"q": "Qual é a função do RNAm?", "a": "Levar a informação transcrita do DNA; apresenta códons."}, {"q": "Qual é a função do RNAr?", "a": "Atuar na síntese de proteínas, compondo o ribossomo."}, {"q": "Qual é a função do RNAt?", "a": "Transportar aminoácidos específicos até o ribossomo; apresenta anticódon."}, {"q": "O que é um códon?", "a": "Uma trinca de bases presente no RNAm."}, {"q": "O que é um anticódon?", "a": "Uma sequência de bases do RNAt que corresponde ao códon do RNAm."}, {"q": "O que acontece quando o RNAt chega ao ribossomo?", "a": "O aminoácido transportado participa da cadeia que formará a proteína."}, {"q": "Quais proteínas são citadas como marcadoras de materiais biológicos?", "a": "Hemoglobina, antígeno prostático específico (PSA) e amilase salivar."}, {"q": "Que proteína é associada ao sangue nos slides?", "a": "Hemoglobina."}, {"q": "Que proteína é associada ao sêmen nos slides?", "a": "Antígeno prostático específico (PSA)."}, {"q": "Que proteína é associada à saliva nos slides?", "a": "Amilase salivar."}, {"q": "No estudo de caso, proteínas que se ligam a compostos de ferro indicam qual material?", "a": "Sangue, conforme a atividade dos slides."}];
+let deck = [...original];
+let index = 0;
+let flipped = false;
+const cardEl = document.getElementById('card');
+const questionEl = document.getElementById('question');
+const answerEl = document.getElementById('answer');
+const counterEl = document.getElementById('counter');
+const statusEl = document.getElementById('status');
+const barEl = document.getElementById('bar');
+const flipBtn = document.getElementById('flip');
+function render() {
+  questionEl.textContent = deck[index].q;
+  answerEl.textContent = deck[index].a;
+  counterEl.textContent = `Cartão ${index + 1} de ${deck.length}`;
+  statusEl.textContent = flipped ? 'Resposta' : 'Pergunta';
+  barEl.style.width = `${((index + 1) / deck.length) * 100}%`;
+  cardEl.classList.toggle('flipped', flipped);
+  cardEl.setAttribute('aria-label', flipped ? 'Resposta exibida. Toque para voltar.' : 'Pergunta exibida. Toque para revelar a resposta.');
+  flipBtn.textContent = flipped ? 'Ver pergunta' : 'Ver resposta';
+  document.getElementById('prev').disabled = index === 0;
+  document.getElementById('next').disabled = index === deck.length - 1;
+}
+function flip() { flipped = !flipped; render(); }
+function move(delta) { index = Math.max(0, Math.min(deck.length - 1, index + delta)); flipped = false; render(); }
+cardEl.addEventListener('click', flip);
+flipBtn.addEventListener('click', flip);
+document.getElementById('prev').addEventListener('click', () => move(-1));
+document.getElementById('next').addEventListener('click', () => move(1));
+document.getElementById('restart').addEventListener('click', () => { deck = [...original]; index = 0; flipped = false; render(); });
+document.getElementById('shuffle').addEventListener('click', () => {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  index = 0; flipped = false; render();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') move(1);
+  if (e.key === 'ArrowLeft') move(-1);
+  if (e.key === ' ' || e.key === 'Enter') {
+    if (document.activeElement !== cardEl && document.activeElement.tagName !== 'BUTTON') return;
+    e.preventDefault(); flip();
+  }
+});
+render();
+</script>
+</body>
+</html>
